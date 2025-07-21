@@ -1,0 +1,85 @@
+import Kafka from '@neighbourhoodie/adonis-kafka/services/kafka'
+
+export default class KafkaService {
+  /**
+   * Envoie un message à micro-1 via Kafka
+   * @param topic Le topic sur lequel envoyer le message
+   * @param message Le message à envoyer
+   */
+  public static async sendToMicro1(topic: string, message: any): Promise<void> {
+    // Convertir le message en chaîne JSON si c'est un objet
+    const messageValue = typeof message === 'object' ? JSON.stringify(message) : message
+
+    await Kafka.producer().send({
+      topic,
+      messages: [{ value: messageValue }],
+    })
+
+    console.log(`Message envoyé à micro-1 sur le topic ${topic}:`, message)
+  }
+
+  /**
+   * Initialise un consommateur pour écouter les messages de micro-1
+   * @param topic Le topic à écouter
+   * @param handler La fonction de traitement des messages
+   * @param groupId L'ID du groupe de consommateurs
+   */
+  public static async listenToMicro1(
+    topic: string,
+    handler: (data: any) => Promise<void>,
+    groupId: string = 'micro-2-group'
+  ): Promise<void> {
+    const consumer = Kafka.createConsumer({ groupId })
+
+    consumer.on({ topic }, async (data, commit, { heartbeat }) => {
+      await heartbeat() // évite l'expiration du leasing
+
+      try {
+        // Essayer de parser le message comme JSON si c'est une chaîne
+        let parsedData = data
+        if (typeof data === 'string') {
+          try {
+            parsedData = JSON.parse(data)
+          } catch (e) {
+            // Si le parsing échoue, utiliser la donnée brute
+            parsedData = data
+          }
+        }
+
+        // Appeler le gestionnaire fourni
+        await handler(parsedData)
+
+        // Confirmer la réception du message
+        commit()
+      } catch (error) {
+        console.error(`Erreur lors du traitement du message sur le topic ${topic}:`, error)
+        // Ne pas commiter en cas d'erreur pour permettre un retraitement
+      }
+    })
+
+    await consumer.start()
+    console.log(`Consommateur Kafka démarré pour le topic ${topic} avec le groupe ${groupId}`)
+  }
+
+  /**
+   * Exemple d'utilisation du service pour envoyer une notification
+   * @param userId L'ID de l'utilisateur destinataire
+   * @param type Le type de notification
+   * @param content Le contenu de la notification
+   */
+  public static async sendNotification(
+    userId: number,
+    type: string,
+    content: string
+  ): Promise<void> {
+    const notification = {
+      userId,
+      type,
+      content,
+      timestamp: new Date().toISOString(),
+      read: false,
+    }
+
+    await this.sendToMicro1('notification.events', notification)
+  }
+}

@@ -1,0 +1,9 @@
+import env from '#start/env'
+
+const kafkaConfig = {
+  brokers: env.get('KAFKA_BROKERS', 'localhost:9092'),
+  clientId: env.get('KAFKA_CLIENT_ID'),
+  logLevel: env.get('KAFKA_LOG_LEVEL', env.get('LOG_LEVEL')),
+}
+
+export default kafkaConfig

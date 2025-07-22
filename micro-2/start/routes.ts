@@ -9,9 +9,9 @@
 
 import router from '@adonisjs/core/services/router'
 
-const notifications_controller = () => import('#controllers/notifications_controller')
-const producers_controller = () => import('#controllers/producers_controller')
-const consumers_controller = () => import('#controllers/consumers_controller')
+const notificationsController = () => import('#controllers/notifications_controller')
+const producersController = () => import('#controllers/producers_controller')
+const consumersController = () => import('#controllers/consumers_controller')
 
 router.get('/', async () => {
   return {
@@ -20,11 +20,11 @@ router.get('/', async () => {
 })
 
 // Routes pour le producteur Kafka
-router.post('/api/kafka/send', [producers_controller, 'sendMessage'])
+router.post('/api/kafka/send', [producersController, 'sendMessage'])
 
 // Routes pour le consommateur Kafka
-router.post('/api/kafka/consume', [consumers_controller, 'setupConsumer'])
-router.get('/api/kafka/consumers', [consumers_controller, 'getConsumerStatus'])
+router.post('/api/kafka/consume', [consumersController, 'setupConsumer'])
+router.get('/api/kafka/consumers', [consumersController, 'getConsumerStatus'])
 
 // Routes pour les notifications
-router.post('/api/notifications/send', [notifications_controller, 'sendNotification'])
+router.post('/api/notifications/send', [notificationsController, 'sendNotification'])

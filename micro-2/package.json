@@ -55,9 +55,9 @@
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.1",
-    "@neighbourhoodie/adonis-kafka": "^0.3.2",
     "@vinejs/vine": "^3.0.1",
     "better-sqlite3": "^12.2.0",
+    "kafkajs": "^2.2.4",
     "luxon": "^3.7.1",
     "reflect-metadata": "^0.2.2"
   },

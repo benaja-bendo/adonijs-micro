@@ -1,47 +1,53 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import Kafka from '@neighbourhoodie/adonis-kafka/services/kafka'
+import KafkaStandaloneService from '#services/kafka_standalone_service'
 
 export default class KafkaController {
   /**
-   * Envoie un message à micro-2 via Kafka
+   * Envoie un message vers micro-2
    */
-  public async sendToMicro2({ request, response }: HttpContext) {
-    const { message, topic = 'micro-1.events' } = request.only(['message', 'topic'])
-
-    if (!message) {
-      return response.badRequest('Message is required')
-    }
-
+  async sendToMicro2({ request, response }: HttpContext) {
     try {
-      // Envoi du message au topic spécifié (par défaut 'micro-1.events')
-      await Kafka.producer().send({
-        topic,
-        messages: [{ value: message }],
-      })
+      const body = await request.body()
 
-      return response.ok({ 
-        status: 'Message sent successfully to micro-2',
-        details: { topic, message }
+      const message = body.message || 'Message par défaut' + Math.random().toString()
+      const topic = body.topic || 'micro-1.events'
+
+      if (!message) {
+        return response.badRequest({ error: 'Le message est requis' })
+      }
+      await KafkaStandaloneService.send(topic, message)
+
+      return response.ok({
+        success: true,
+        message: 'Message envoyé avec succès',
+        data: { topic, message },
       })
     } catch (error) {
-      console.error('Error sending message to micro-2:', error)
-      return response.internalServerError('Failed to send message to micro-2')
+      console.error("Erreur lors de l'envoi du message:", error)
+      return response.internalServerError({
+        error: "Erreur lors de l'envoi du message",
+      })
     }
   }
 
   /**
-   * Récupère l'état des consommateurs Kafka
+   * Obtient le statut de Kafka (simulation)
    */
-  public async getKafkaStatus({ response }: HttpContext) {
-    // Ceci est une simulation - dans une application réelle, vous devriez suivre l'état des consommateurs
-    return response.ok({
-      consumers: [
-        { topic: 'micro-2.events', groupId: 'micro-1-group', status: 'active' },
-        // Ajoutez d'autres consommateurs selon vos besoins
-      ],
-      producers: [
-        { status: 'active' }
-      ]
-    })
+  async getKafkaStatus({ response }: HttpContext) {
+    // Simulation du statut Kafka
+    const status = {
+      producer: {
+        connected: true,
+        status: 'healthy',
+      },
+      consumer: {
+        connected: true,
+        status: 'healthy',
+        groupId: 'micro-1-group',
+      },
+      topics: ['micro-1.events', 'user.events', 'notification.events'],
+    }
+
+    return response.ok(status)
   }
 }

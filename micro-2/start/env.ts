@@ -10,7 +10,6 @@
 */
 
 import { Env } from '@adonisjs/core/env'
-import { KafkaEnv } from '@neighbourhoodie/adonis-kafka/env'
 
 export default await Env.create(new URL('../', import.meta.url), {
   NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
@@ -24,10 +23,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   | Variables for configuring kafka package
   |----------------------------------------------------------
   */
-  KAFKA_BROKERS: KafkaEnv.schema.brokers(),
+  KAFKA_BROKERS: Env.schema.string(),
   KAFKA_CLIENT_ID: Env.schema.string.optional(),
-  KAFKA_GROUP_ID: Env.schema.string.optional(),
-  KAFKA_CONNECTION_TIMEOUT: Env.schema.number.optional(),
-  KAFKA_REQUEST_TIMEOUT: Env.schema.number.optional(),
-  KAFKA_LOG_LEVEL: Env.schema.enum.optional(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+  KAFKA_LOG_LEVEL: Env.schema.enum.optional(['error', 'warn', 'info', 'debug'])
 })
